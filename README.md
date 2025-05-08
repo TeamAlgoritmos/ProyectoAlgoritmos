@@ -42,3 +42,37 @@ source venv/bin/activate  # Linux/Mac
 
 # Instalar dependencias
 pip install -r requirements.txt
+
+##Estructura Proeycto
+
+ProyectoAlgoritmos/          # Carpeta raíz del proyecto
+│
+├── src/                     # Código fuente principal
+│   ├── __init__.py
+│   ├── app.py               # Aplicación Flask principal
+│   ├── algorithms/          # Implementación de algoritmos
+│   │   ├── __init__.py
+│   │   ├── brute_force.py
+│   │   ├── nearest_neighbor.py
+│   │   └── genetic.py
+│   ├── utils/               # Utilidades
+│   │   ├── graph_utils.py   # Manejo de grafos
+│   │   └── file_utils.py    # Procesamiento de archivos
+│   └── static/              # Archivos estáticos (CSS, JS)
+│       ├── css/
+│       └── js/
+│
+├── data/                    # Datos de ejemplo
+│   ├── red_vial.csv         # Ejemplo red vial
+│   └── puntos_interes.csv   # Ejemplo puntos de interés
+│
+├── tests/                   # Pruebas unitarias
+│   ├── test_algorithms.py
+│   └── test_utils.py
+│
+├── docs/                    # Documentación
+│   └── technical_report.md  # Informe técnico
+│
+├── .gitignore               # Archivo para ignorar venv/ y otros
+├── requirements.txt         # Dependencias del proyecto
+└── README.md                # Documentación principal
