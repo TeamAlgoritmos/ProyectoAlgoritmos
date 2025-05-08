@@ -1,0 +1,5 @@
+flask==3.0.2
+networkx==3.2.1
+pandas==2.1.4
+folium==0.15.1
+python-dotenv==1.0.0
