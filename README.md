@@ -27,7 +27,7 @@ Este proyecto implementa un sistema para optimizar el orden de visita de ubicaci
   - NetworkX (para manejo de grafos)
   - Pandas (para procesamiento de datos)
  
-##Estructura Proyecto
+## Estructura Proyecto
 
 ```text
 ProyectoAlgoritmos/
