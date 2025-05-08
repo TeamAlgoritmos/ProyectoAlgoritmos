@@ -26,24 +26,8 @@ Este proyecto implementa un sistema para optimizar el orden de visita de ubicaci
   - Leaflet/OpenLayers (para visualización de mapas)
   - NetworkX (para manejo de grafos)
   - Pandas (para procesamiento de datos)
-
-## Instalación
-
-1. Clonar el repositorio:
-```bash
-# Clonar repositorio
-git clone https://github.com/TeamAlgoritmos/ProyectoAlgoritmos.git
-cd ProyectoAlgoritmos
-
-# Crear y activar entorno virtual (opcional pero recomendado)
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-.\venv\Scripts\activate  # Windows
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-##Estructura Proeycto
+ 
+##Estructura Proyecto
 
 ProyectoAlgoritmos/          # Carpeta raíz del proyecto
 │
@@ -76,3 +60,20 @@ ProyectoAlgoritmos/          # Carpeta raíz del proyecto
 ├── .gitignore               # Archivo para ignorar venv/ y otros
 ├── requirements.txt         # Dependencias del proyecto
 └── README.md                # Documentación principal
+
+## Instalación
+
+1. Clonar el repositorio:
+```bash
+# Clonar repositorio
+git clone https://github.com/TeamAlgoritmos/ProyectoAlgoritmos.git
+cd ProyectoAlgoritmos
+
+# Crear y activar entorno virtual (opcional pero recomendado)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate  # Windows
+
+# Instalar dependencias
+pip install -r requirements.txt
+
