@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimizador de Rutas TSP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Optimizador de Rutas TSP</h1>
+        
+        <div class="control-panel">
+            <div class="section">
+                <h2>1. Cargar Red Vial</h2>
+                <input type="file" id="network-file" accept=".csv">
+                <button id="load-network">Cargar Red</button>
+                <p class="help">Formato CSV: origen,destino,distancia</p>
+            </div>
+            
+            <div class="section">
+                <h2>2. Cargar Puntos de Interés</h2>
+                <input type="file" id="points-file" accept=".txt,.csv" disabled>
+                <button id="load-points" disabled>Cargar Puntos</button>
+                <p class="help">Un punto por línea (A, B, C, etc.)</p>
+            </div>
+            
+            <div class="section">
+                <h2>3. Resolver TSP</h2>
+                <select id="algorithm" disabled>
+                    <option value="">-- Seleccione --</option>
+                    <option value="brute_force">Brute Force</option>
+                    <option value="nearest_neighbor">Nearest Neighbor</option>
+                    <option value="genetic">Genetic</option>
+                </select>
+                <button id="solve-tsp" disabled>Resolver</button>
+            </div>
+        </div>
+        
+        <div id="results">
+            <!-- Los resultados aparecerán aquí -->
+        </div>
+    </div>
+</body>
+</html>
