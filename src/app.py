@@ -157,4 +157,4 @@ if __name__ == '__main__':
         with open('static/js/app.js', 'w') as f:
             f.write("console.log('App loaded');")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
