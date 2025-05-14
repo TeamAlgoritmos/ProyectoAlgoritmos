@@ -1,0 +1,164 @@
+import random
+import networkx as nx
+from typing import List, Tuple
+
+def generate_initial_population(graph: nx.Graph, start_node: int, population_size: int, distance_matrix: dict, max_length: int) -> List[List[int]]:
+    """
+    Genera una población inicial de soluciones aleatorias (rutas) permitiendo visitas repetidas a los nodos.
+    Args:
+        graph: Grafo de NetworkX que representa la red de carreteras
+        start_node: Nodo inicial para comenzar el recorrido
+        population_size: Tamaño de la población
+        distance_matrix: Matriz de distancias entre los nodos
+        max_length: Longitud máxima de cada ruta
+    Returns:
+        List[List[int]]: Lista de rutas generadas aleatoriamente
+    """
+    population = []
+    
+    for _ in range(population_size):
+        # Inicializar la ruta con el nodo de inicio
+        path = [start_node]
+        nodes = list(graph.nodes())
+        
+        # Crear la ruta de manera válida respetando la matriz de distancias
+        while len(path) < max_length:
+            current_node = path[-1]
+            possible_next_nodes = [node for node in nodes if node in distance_matrix[current_node]]
+            
+            if not possible_next_nodes:
+                break  # Si no hay más nodos alcanzables, se detiene la creación de la ruta
+            
+            next_node = random.choice(possible_next_nodes)
+            path.append(next_node)
+
+        # Asegurarse de que la ruta regresa al nodo inicial
+        path.append(start_node)
+        population.append(path)
+    
+    return population
+
+
+def evaluate_fitness(graph: nx.Graph, path: List[int], distance_matrix: dict) -> float:
+    """
+    Calcula la distancia total de la ruta, lo que se usará como el fitness.
+    Args:
+        graph: Grafo de NetworkX que representa la red de carreteras
+        path: Ruta a evaluar
+        distance_matrix: Matriz de distancias precalculadas entre los puntos
+    Returns:
+        float: Distancia total de la ruta
+    """
+    total_distance = 0
+    #print(path)
+    for i in range(len(path) - 1):
+        try:
+            # Usar la matriz de distancias precalculada
+            total_distance += distance_matrix[path[i]][path[i + 1]]
+        except KeyError:
+            # Si no hay una ruta entre estos puntos, se retorna un valor alto
+            return float('inf')
+    
+    return total_distance
+
+def tournament_selection(population: List[List[int]], fitness: List[float], tournament_size: int = 3) -> List[int]:
+    """
+    Realiza una selección por torneo.
+    Args:
+        population: Lista de rutas
+        fitness: Lista de fitness de las rutas
+        tournament_size: Número de individuos a seleccionar aleatoriamente para el torneo
+    Returns:
+        List[int]: Ruta seleccionada
+    """
+    tournament_size = min(tournament_size, len(population))
+    tournament = random.sample(list(zip(population, fitness)), tournament_size)
+    tournament.sort(key=lambda x: x[1])  # Ordenar por fitness (distancia total)
+    return tournament[0][0]  # Devolver la mejor ruta
+
+def ordered_crossover(parent1: List[int], parent2: List[int]) -> List[int]:
+    """
+    Realiza un cruce ordenado (Ordered Crossover - OX).
+    Args:
+        parent1: Primer padre (ruta)
+        parent2: Segundo padre (ruta)
+    Returns:
+        List[int]: Hijo generado a partir de los padres
+    """
+    start, end = sorted(random.sample(range(len(parent1)), 2))  # Seleccionar un segmento aleatorio
+    child = [None] * len(parent1)
+
+    # Copiar el segmento de parent1 al hijo
+    child[start:end] = parent1[start:end]
+
+    # Completar el resto del hijo con los nodos restantes de parent2, manteniendo el orden
+    parent2_pointer = 0
+    for i in range(len(parent2)):
+        if parent2[i] not in child:
+            while child[parent2_pointer] is not None:
+                parent2_pointer += 1
+            child[parent2_pointer] = parent2[i]
+
+    child[len(parent2) - 1] = child[0]  # Asegurarse de que el hijo regrese al nodo de inicio
+    return child
+
+def two_opt_mutation(path: List[int]) -> List[int]:
+    """
+    Realiza una mutación de 2-opt.
+    Args:
+        path: Ruta a mutar
+    Returns:
+        List[int]: Ruta mutada
+    """
+    i, j = sorted(random.sample(range(1, len(path) - 1), 2))
+    path[i:j+1] = reversed(path[i:j+1])  # Invertir el segmento
+    return path
+
+def solve(graph: nx.Graph, points: List[int], distance_matrix: dict, population_size: int = 100, generations: int = 100, mutation_rate: float = 0.1) -> Tuple[List[int], float]:
+    """
+    Algoritmo genético para resolver el problema del vendedor viajero (TSP).
+    Args:
+        graph: Grafo de NetworkX que representa la red de carreteras
+        points: Puntos de interés en el recorrido
+        distance_matrix: Matriz de distancias precalculadas entre los puntos
+        population_size: Tamaño de la población
+        generations: Número de generaciones
+        mutation_rate: Probabilidad de mutación
+    Returns:
+        Tuple[List[int], float]: Ruta encontrada y su distancia total
+    """
+    # Generar población inicial
+    population = generate_initial_population(graph, points[0], population_size, distance_matrix, max_length=5)  # Máxima longitud de la ruta
+    for _ in range(generations):
+        fitness = []
+        for path in population:
+            fitness.append(evaluate_fitness(graph, path, distance_matrix))
+
+        # Selección y generación de la nueva población
+        new_population = []
+        for _ in range(population_size // 2):
+            parent1 = tournament_selection(population, fitness)
+            parent2 = tournament_selection(population, fitness)
+
+            # Realizar cruce
+            child1 = ordered_crossover(parent1, parent2)
+            child2 = ordered_crossover(parent2, parent1)
+
+            # Realizar mutación con probabilidad
+            if random.random() < mutation_rate:
+                child1 = two_opt_mutation(child1)
+            if random.random() < mutation_rate:
+                child2 = two_opt_mutation(child2)
+
+            # Añadir los hijos a la nueva población
+            new_population.append(child1)
+            new_population.append(child2)
+
+        population = new_population
+
+    # Evaluar la mejor solución
+    fitness = [evaluate_fitness(graph, path, distance_matrix) for path in population]
+    best_path = population[fitness.index(min(fitness))]
+    best_distance = min(fitness)
+
+    return best_path, best_distance, 0
