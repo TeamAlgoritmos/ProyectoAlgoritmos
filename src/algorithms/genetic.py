@@ -78,10 +78,11 @@ def solve(graph: nx.Graph, points: List[int], distance_matrix: dict, population_
     # Generar población inicial
     population = generate_initial_population(graph, points[0], population_size, distance_matrix)
     
+    print(distance_matrix)
     for _ in range(generations):
         fitness = []
         for path in population:
-            print(path)
+            #print(path)
             fitness.append(evaluate_fitness(graph, path, distance_matrix))
 
         # Selección y generación de la nueva población
