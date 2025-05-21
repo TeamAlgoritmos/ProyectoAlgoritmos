@@ -3,6 +3,7 @@ networkx==3.2.1
 pandas==2.1.4
 folium==0.15.1
 python-dotenv==1.0.0
-shapely==2.0.2          # Para cálculos geográficos
-geopy==2.4.1            # Para distancias geográficas
-python-ternary==1.0.8   # Para visualización (opcional)
+shapely==2.0.2
+geopy==2.4.1
+python-ternary==1.0.8
+flask-cors==4.0.0 

@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Frontend cargado correctamente');
-    
     // Elementos del DOM
     const loadNetworkBtn = document.getElementById('load-network');
     const loadPointsBtn = document.getElementById('load-points');
@@ -9,29 +7,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const networkFileInput = document.getElementById('network-file');
     const pointsFileInput = document.getElementById('points-file');
     const algorithmSelect = document.getElementById('algorithm');
+    const mapContainer = document.getElementById('map-container');
 
     // Estado inicial
     loadPointsBtn.disabled = true;
     solveTspBtn.disabled = true;
     algorithmSelect.disabled = true;
 
-    // Mostrar mensaje de estado
+    // Mostrar mensajes de estado
     function showStatus(message, isError = false) {
         const statusElement = document.createElement('div');
         statusElement.className = isError ? 'status-error' : 'status-success';
-        statusElement.textContent = message;
+        statusElement.innerHTML = message;
         resultsContainer.prepend(statusElement);
         setTimeout(() => statusElement.remove(), 5000);
     }
 
-    // Habilitar/deshabilitar controles
+    // Actualizar estado de los controles
     function updateControls() {
         loadPointsBtn.disabled = !networkFileInput.files.length;
         algorithmSelect.disabled = !pointsFileInput.files.length;
         solveTspBtn.disabled = !algorithmSelect.value || !pointsFileInput.files.length;
     }
 
-    // Event listeners para cambios
+    // Event listeners
     networkFileInput.addEventListener('change', updateControls);
     pointsFileInput.addEventListener('change', updateControls);
     algorithmSelect.addEventListener('change', updateControls);
@@ -40,11 +39,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadNetworkBtn.addEventListener('click', async function() {
         const file = networkFileInput.files[0];
         if (!file) {
-            showStatus('Por favor seleccione un archivo CSV para la red vial', true);
+            showStatus('❌ Seleccione un archivo XML', true);
             return;
         }
 
-        showStatus('Cargando red vial...');
+        showStatus('⏳ Cargando red vial...');
         loadNetworkBtn.disabled = true;
 
         const formData = new FormData();
@@ -59,15 +58,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (!response.ok) {
-                throw new Error(data.error || 'Error al cargar la red vial');
+                throw new Error(data.error || 'Error al cargar red vial');
             }
 
-            showStatus(`Red vial cargada con ${data.nodes.length} nodos y ${data.edges.length} conexiones`);
+            showStatus(`✅ Red cargada: ${data.stats.nodes} nodos, ${data.stats.edges} conexiones`);
             pointsFileInput.disabled = false;
             updateControls();
+
         } catch (error) {
-            console.error('Error:', error);
-            showStatus(error.message, true);
+            console.error("Error:", error);
+            showStatus(`❌ ${error.message}`, true);
         } finally {
             loadNetworkBtn.disabled = false;
         }
@@ -77,11 +77,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPointsBtn.addEventListener('click', async function() {
         const file = pointsFileInput.files[0];
         if (!file) {
-            showStatus('Por favor seleccione un archivo con los puntos de interés', true);
+            showStatus('❌ Seleccione un archivo TSV/CSV', true);
             return;
         }
 
-        showStatus('Cargando puntos de interés...');
+        showStatus('⏳ Cargando puntos...');
         loadPointsBtn.disabled = true;
 
         const formData = new FormData();
@@ -96,14 +96,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (!response.ok) {
-                throw new Error(data.error || 'Error al cargar los puntos');
+                throw new Error(data.error || 'Error al cargar puntos');
             }
 
-            showStatus(`${data.points.length} puntos cargados correctamente`);
+            showStatus(`✅ ${data.points_loaded} puntos cargados`);
             updateControls();
+
         } catch (error) {
-            console.error('Error:', error);
-            showStatus(error.message, true);
+            console.error("Error:", error);
+            showStatus(`❌ ${error.message}`, true);
         } finally {
             loadPointsBtn.disabled = false;
         }
@@ -112,54 +113,79 @@ document.addEventListener('DOMContentLoaded', function() {
     // Resolver TSP
     solveTspBtn.addEventListener('click', async function() {
         const algorithm = algorithmSelect.value;
-        if (!algorithm) {
-            showStatus('Por favor seleccione un algoritmo', true);
-            return;
-        }
-
-        showStatus(`Ejecutando algoritmo ${algorithm}...`);
+        showStatus(`⚙️ Ejecutando ${algorithm}...`);
         solveTspBtn.disabled = true;
 
         try {
             const response = await fetch('/api/solve_tsp', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ algorithm })
             });
 
             const data = await response.json();
             
             if (!response.ok) {
-                throw new Error(data.error || 'Error al ejecutar el algoritmo');
+                throw new Error(data.error || 'Error al ejecutar algoritmo');
             }
 
             // Mostrar resultados
             resultsContainer.innerHTML = `
                 <div class="result-card">
-                    <h3>Resultados: ${data.algorithm}</h3>
-                    <p><strong>Ruta:</strong> ${data.path}</p>
-                    <p><strong>Distancia:</strong> ${data.distance} unidades</p>
-                    <p><strong>Tiempo:</strong> ${data.execution_time_ms} ms</p>
-                    <p><strong>Nodos:</strong> ${data.nodes_visited}</p>
-                    <p><strong>Eficiencia:</strong> ${data.efficiency} unidades/ms</p>
+                    <h3>Resultados: ${algorithm.toUpperCase()}</h3>
+                    <div class="result-grid">
+                        <div><strong>Ruta:</strong></div>
+                        <div>${data.path.join(' → ')}</div>
+                        <div><strong>Distancia total:</strong></div>
+                        <div>${data.distance.toFixed(2)} metros</div>
+                    </div>
                 </div>
             `;
-            
-            showStatus(`Algoritmo ${algorithm} completado exitosamente`);
+
+            // Mostrar mapa si hay coordenadas
+            if (data.path_coordinates) {
+                renderMap(data.path_coordinates);
+            }
+
+            showStatus(`✅ ${algorithm} completado`);
+
         } catch (error) {
-            console.error('Error:', error);
-            showStatus(error.message, true);
+            console.error("Error:", error);
+            showStatus(`❌ ${error.message}`, true);
             resultsContainer.innerHTML = `
                 <div class="error-card">
-                    <h3>Error en ${algorithm}</h3>
+                    <h3>Error</h3>
                     <p>${error.message}</p>
-                    <p>Ver la consola para más detalles (F12)</p>
+                    <button onclick="location.reload()">Reintentar</button>
                 </div>
             `;
         } finally {
             solveTspBtn.disabled = false;
         }
     });
+
+    // Renderizar mapa (requiere Leaflet)
+    function renderMap(coordinates) {
+        if (typeof L === 'undefined') return;
+        
+        mapContainer.innerHTML = '<div id="map" style="height: 500px;"></div>';
+        const map = L.map('map').setView([coordinates[0][0], coordinates[0][1]], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        // Dibujar ruta
+        const route = coordinates.map(coord => [coord[0], coord[1]]);
+        L.polyline(route, {color: 'blue'}).addTo(map);
+        
+        // Marcadores
+        coordinates.forEach((coord, i) => {
+            if (i === 0 || i === coordinates.length - 1) {
+                L.marker([coord[0], coord[1]])
+                    .addTo(map)
+                    .bindPopup(i === 0 ? 'Inicio' : 'Fin');
+            }
+        });
+    }
 });

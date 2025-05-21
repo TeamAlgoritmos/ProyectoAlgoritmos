@@ -66,7 +66,7 @@ def procesar_mapa(archivo_xml):
 
 if __name__ == "__main__":
     print("hola mundo")
-    archivo = "/Users/simonmarquez/Dropbox/Simon/UNIVERSIDAD/SEXTO SEMESTRE/ANALISIS DE ALGORITMOS/ProyectoAlgoritmos/prueba/nodes+ways.xml"
+    archivo = "prueba/nodes+ways.xml"
     
     nodos, caminos, mapa = procesar_mapa(archivo)
 

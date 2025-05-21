@@ -1,2 +1,2 @@
-// JavaScript básico
+// JavaScript bï¿½sico
 console.log('App loaded');
