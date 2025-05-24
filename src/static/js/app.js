@@ -11,9 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const algorithmSelect = document.getElementById('algorithm');
 
     // Estado inicial
-    loadPointsBtn.disabled = true;
     solveTspBtn.disabled = true;
     algorithmSelect.disabled = true;
+    let networkData = null;
+    let pointsData = null;
 
     // Mostrar mensaje de estado
     function showStatus(message, isError = false) {
@@ -26,9 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Habilitar/deshabilitar controles
     function updateControls() {
-        loadPointsBtn.disabled = !networkFileInput.files.length;
-        algorithmSelect.disabled = !pointsFileInput.files.length;
-        solveTspBtn.disabled = !algorithmSelect.value || !pointsFileInput.files.length;
+        const networkLoaded = !!networkData;
+        const pointsLoaded = !!pointsData;
+        
+        pointsFileInput.disabled = !networkLoaded;
+        loadPointsBtn.disabled = !networkLoaded;
+        algorithmSelect.disabled = !networkLoaded || !pointsLoaded;
+        solveTspBtn.disabled = !networkLoaded || !pointsLoaded || !algorithmSelect.value;
     }
 
     // Event listeners para cambios
@@ -62,9 +67,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(data.error || 'Error al cargar la red vial');
             }
 
-            showStatus(`Red vial cargada con ${data.nodes.length} nodos y ${data.edges.length} conexiones`);
-            pointsFileInput.disabled = false;
+            networkData = data;
+            showStatus(`Red vial cargada (${data.nodes.length} nodos)`);
             updateControls();
+
         } catch (error) {
             console.error('Error:', error);
             showStatus(error.message, true);
@@ -77,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPointsBtn.addEventListener('click', async function() {
         const file = pointsFileInput.files[0];
         if (!file) {
-            showStatus('Por favor seleccione un archivo con los puntos de interés', true);
+            showStatus('Por favor seleccione un archivo CSV para los puntos de interés', true);
             return;
         }
 
@@ -96,11 +102,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (!response.ok) {
-                throw new Error(data.error || 'Error al cargar los puntos');
+                throw new Error(data.error || 'Error al cargar los puntos de interés');
             }
 
-            showStatus(`${data.points.length} puntos cargados correctamente`);
+            pointsData = data;
+            showStatus(`Puntos de interés cargados (${data.points.length} puntos)`);
+            
+            // Mostrar puntos en el mapa
+            if (data.points && data.points.length > 0) {
+                initMap(data.points[0].Y, data.points[0].X);
+                addMarkersToMap(data.points);
+                drawNetworkBoundary(networkData);
+            }
+
             updateControls();
+
         } catch (error) {
             console.error('Error:', error);
             showStatus(error.message, true);
@@ -163,3 +179,116 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Inicializar el mapa
+let map = null;
+let markers = [];
+let boundaryPolygon = null;
+
+function initMap(latitude, longitude) {
+    if (map !== null) {
+        map.remove();
+    }
+    map = L.map('map').setView([latitude, longitude], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+}
+
+// Añadir marcadores al mapa
+function addMarkersToMap(points) {
+    // Limpiar marcadores existentes
+    markers.forEach(marker => marker.remove());
+    markers = [];
+
+    points.forEach(point => {
+        const marker = L.marker([point.Y, point.X])
+            .bindPopup(`<b>Punto ID: ${point.id}</b>`);
+        markers.push(marker);
+        marker.addTo(map);
+    });
+
+    // Ajustar el mapa para que se vean todos los marcadores
+    if (markers.length > 0) {
+        const group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds());
+    }
+}
+
+// Dibujar el límite de la red
+function drawNetworkBoundary(networkData) {
+    if (boundaryPolygon) {
+        map.removeLayer(boundaryPolygon);
+    }
+
+    // Obtener las coordenadas extremas de la red
+    const points = networkData.points || [];
+    if (points.length === 0) return;
+
+    const bounds = points.reduce((acc, point) => {
+        return {
+            minLat: Math.min(acc.minLat, point.Y),
+            maxLat: Math.max(acc.maxLat, point.Y),
+            minLng: Math.min(acc.minLng, point.X),
+            maxLng: Math.max(acc.maxLng, point.X)
+        };
+    }, {
+        minLat: points[0].Y,
+        maxLat: points[0].Y,
+        minLng: points[0].X,
+        maxLng: points[0].X
+    });
+
+    // Crear el polígono que enmarca la red
+    const polygonPoints = [
+        [bounds.minLat, bounds.minLng],
+        [bounds.minLat, bounds.maxLng],
+        [bounds.maxLat, bounds.maxLng],
+        [bounds.maxLat, bounds.minLng]
+    ];
+
+    boundaryPolygon = L.polygon(polygonPoints, {
+        color: 'red',
+        fillColor: '#f03',
+        fillOpacity: 0.1
+    }).addTo(map);
+
+    // Ajustar el mapa para mostrar todo el polígono
+    map.fitBounds(boundaryPolygon.getBounds());
+}
+
+// La carga inicial del mapa ahora se hace despues de cargar los puntos de interes
+// La funcion loadAndDisplayMapPoints() ya no es necesaria para la carga inicial de la pagina
+// Se mantiene porque podria ser util para refactorizacion futura o si se desea
+// cargar los puntos del mapa desde otra fuente en algun momento.
+async function loadAndDisplayMapPoints_deprecated() {
+    try {
+        // Este endpoint ya no se usa para la carga inicial
+        // Los datos para el mapa ahora vienen con la carga de puntos de interes
+        console.log('Esta funcion loadAndDisplayMapPoints_deprecated no se usa para la carga inicial.');
+        /*
+        const response = await fetch('/api/map_points');
+        const points = await response.json();
+
+        if (!response.ok) {
+            throw new Error(points.error || 'Error al cargar puntos del mapa');
+        }
+
+        if (points.length > 0) {
+            // Inicializar mapa con las coordenadas del primer punto
+            initMap(points[0].Y, points[0].X);
+            // Añadir todos los puntos como marcadores
+            addMarkersToMap(points);
+        } else {
+            showStatus('No se encontraron puntos con coordenadas para mostrar en el mapa.', true);
+        }
+        */
+
+    } catch (error) {
+        console.error('Error en loadAndDisplayMapPoints_deprecated:', error);
+    }
+}
+
+// La llamada a loadAndDisplayMapPoints() al cargar la pagina ya no es necesaria
+// loadAndDisplayMapPoints();

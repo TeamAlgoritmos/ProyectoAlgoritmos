@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Optimizador de Rutas TSP</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </head>
 <body>
@@ -21,20 +23,22 @@
             
             <div class="section">
                 <h2>2. Cargar Puntos de Interés</h2>
-                <input type="file" id="points-file" accept=".txt,.csv" disabled>
-                <button id="load-points" disabled>Cargar Puntos</button>
-                <p class="help">Un punto por línea (A, B, C, etc.)</p>
+                <input type="file" id="points-file" accept=".csv">
+                <button id="load-points">Cargar Puntos</button>
+                <p class="help">Formato CSV: X,Y,id</p>
             </div>
+            
+            <div id="map" style="height: 600px; margin-top: 20px;"></div>
             
             <div class="section">
                 <h2>3. Resolver TSP</h2>
-                <select id="algorithm" disabled>
+                <select id="algorithm">
                     <option value="">-- Seleccione --</option>
                     <option value="brute_force">Brute Force</option>
                     <option value="nearest_neighbor">Nearest Neighbor</option>
                     <option value="genetic">Genetic</option>
                 </select>
-                <button id="solve-tsp" disabled>Resolver</button>
+                <button id="solve-tsp">Resolver</button>
             </div>
         </div>
         
