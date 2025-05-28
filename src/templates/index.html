@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Optimizador de Rutas TSP</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+    <style>
+        #map { 
+            height: 500px; 
+            width: 100%;
+            border-radius: 8px;
+            z-index: 1;
+        }
+        .map-container {
+            margin-top: 20px;
+            position: relative;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -53,7 +65,7 @@
             </div>
         </div>
         
-        <div id="map-container">
+        <div class="map-container">
             <div id="map"></div>
         </div>
         
@@ -63,7 +75,6 @@
     </div>
 
     <script>
-        // Mostrar/ocultar parámetros según algoritmo seleccionado
         document.getElementById('algorithm').addEventListener('change', function() {
             const geneticParams = document.getElementById('genetic-params');
             geneticParams.style.display = this.value === 'genetic' ? 'block' : 'none';

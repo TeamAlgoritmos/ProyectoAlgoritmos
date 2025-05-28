@@ -1,62 +1,36 @@
-from typing import List, Tuple
 import networkx as nx
-import time
 
-def solve(graph: nx.Graph, points: List[str], distance_matrix: dict) -> Tuple[List[str], float, float]:
-    """
-    Implementación del algoritmo del vecino más cercano para TSP.
+def solve(graph, points):
+    """Versión tolerante a desconexiones"""
+    if len(points) < 2:
+        return points, float('inf')
     
-    Args:
-        graph: Grafo de NetworkX que representa la red de carreteras
-        points: Lista de puntos a visitar
-        distance_matrix: Matriz de distancias precalculada
-        
-    Returns:
-        Tuple[List[str], float, float]: (ruta encontrada, distancia total, tiempo de ejecución)
-    """
-    start_time = time.time()
-    
-    if not points:
-        raise ValueError("No hay puntos para visitar")
-    
-    start_node = points[0]
-    unvisited = set(points[1:])  # Removemos el nodo inicial
-    
-    current = start_node
-    path = [current]
-    total_distance = 0
+    path = [points[0]]
+    unvisited = set(points[1:])
     
     while unvisited:
-        # Encontrar el vecino más cercano no visitado
-        min_distance = float('inf')
-        next_node = None
+        current = path[-1]
+        reachable = [n for n in unvisited if nx.has_path(graph, current, n)]
         
-        for node in unvisited:
-            try:
-                distance = distance_matrix[current][node]
-                if distance < min_distance:
-                    min_distance = distance
-                    next_node = node
-            except KeyError:
-                continue
-        
-        if next_node is None:
-            # No hay camino posible
-            return None, float('inf'), time.time() - start_time
-        
-        # Actualizar el camino
-        path.append(next_node)
-        total_distance += min_distance
-        unvisited.remove(next_node)
-        current = next_node
+        if not reachable:
+            break  # No hay más nodos alcanzables
+            
+        nearest = min(reachable, 
+                     key=lambda x: nx.shortest_path_length(graph, current, x, weight='weight'))
+        path.append(nearest)
+        unvisited.remove(nearest)
     
-    # Volver al nodo inicial
-    try:
-        final_distance = distance_matrix[current][start_node]
-        total_distance += final_distance
-        path.append(start_node)
-    except KeyError:
-        return None, float('inf'), time.time() - start_time
+    # Intentar cerrar el ciclo si es posible
+    if len(path) > 2 and path[0] != path[-1]:
+        if nx.has_path(graph, path[-1], path[0]):
+            path.append(path[0])
     
-    execution_time = time.time() - start_time
-    return path, total_distance, execution_time
+    # Calcular distancia total (infinito si hay desconexiones)
+    total_distance = 0
+    for i in range(len(path)-1):
+        try:
+            total_distance += nx.shortest_path_length(graph, path[i], path[i+1], weight='weight')
+        except nx.NetworkXNoPath:
+            return path, float('inf')
+    
+    return path, total_distance
