@@ -195,7 +195,7 @@ def load_network():
                                         ],
                                     ],
                                 },
-                                "properties": {"color": "#cccccc", "weight": 2},
+                                "properties": {"color": "#9ac3f4", "weight": 2},
                             }
                             for n1, n2 in app.graph.edges()
                         ]
