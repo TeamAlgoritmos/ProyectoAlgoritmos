@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Error en el algoritmo");
+      if (!response.ok) throw new Error(data.message || "Error en el algoritmo");
 
       // Renderizar resultados
       renderResults(data, algorithm);
@@ -255,7 +255,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Dibujar puntos de interés (si existen)
     if (data.visualization_data?.points) {
       markersLayer = L.layerGroup();
-      data.visualization_data.points.forEach((point, index) => {
+      data.visualization_data.points.features.forEach((point, index) => {
         const marker = L.circleMarker(
           [point.geometry.coordinates[1], point.geometry.coordinates[0]],
           {

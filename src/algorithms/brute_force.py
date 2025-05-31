@@ -27,4 +27,7 @@ def solve(graph, points):
         except nx.NetworkXNoPath:
             continue
     
+    if min_path is None:
+        raise ValueError("No se encontró una ruta válida entre los puntos.")
+    
     return min_path, min_distance
