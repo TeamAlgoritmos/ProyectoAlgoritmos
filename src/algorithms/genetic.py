@@ -2,7 +2,7 @@ import random
 import networkx as nx
 from math import exp
 
-def solve(graph, points, population_size=50, generations=100, mutation_rate=0.05):
+def solve(graph, points, population_size=10, generations=5, mutation_rate=0.05):
     """Algoritmo genético para TSP"""
     
     # Función de fitness (inversa de la distancia)
